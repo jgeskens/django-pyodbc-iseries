@@ -27,6 +27,9 @@ from django.db.backends.base.operations import BaseDatabaseOperations
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.timezone import is_aware, utc
+from django.db.models import Exists, ExpressionWrapper, Lookup
+from django.db.models.expressions import RawSQL
+from django.db.models.sql.where import WhereNode
 
 from django_iseries import query
 
@@ -507,3 +510,19 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     def check_expression_support(self, expression):
         super().check_expression_support(expression)
+
+    def conditional_expression_supported_in_where_clause(self, expression):
+        """
+        DB2, like Oracle, supports only EXISTS(...) or filters in the WHERE clause, others
+        must be compared with True.
+        """
+
+        if isinstance(expression, (Exists, Lookup, WhereNode)):
+            return True
+        if isinstance(expression, ExpressionWrapper) and expression.conditional:
+            return self.conditional_expression_supported_in_where_clause(
+                expression.expression
+            )
+        if isinstance(expression, RawSQL) and expression.conditional:
+            return True
+        return False
