@@ -131,10 +131,10 @@ class DatabaseOperations(BaseDatabaseOperations):
         field_name = self._convert_field_to_tz(field_name, tzname)
         return "DATE(%s)" % field_name
 
-    def field_cast_sql(self, db_type, internal_type):
-        if db_type == 'SMALLINT' and internal_type == 'BooleanField':
-            return 'coalesce((select 1 from sysibm.sysdummy1 where %s), 0)'
-        return super().field_cast_sql(db_type, internal_type)
+    # def field_cast_sql(self, db_type, internal_type):
+    #     if db_type == 'SMALLINT' and internal_type == 'BooleanField':
+    #         return 'coalesce((select 1 from sysibm.sysdummy1 where %s), 0)'
+    #     return super().field_cast_sql(db_type, internal_type)
 
     # Function to extract day, month or year from the date.
     # Reference: http://publib.boulder.ibm.com/infocenter/db2luw/v9r5/topic/com.ibm.db2.luw.sql.ref.doc/doc/r0023457.html
