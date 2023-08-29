@@ -12,6 +12,10 @@ jobs:
       - name: Provide empty .env.local
         run: touch .env.local
 
-      - name: Run rests
-        run: docker-compose run --rm tests
-
+      - name: Run tests
+        run: |
+          TEST_SYSTEM_HOST="${{ secrets.TEST_SYSTEM_HOST }}" \
+          TEST_SYSTEM_USERNAME="${{ secrets.TEST_SYSTEM_USERNAME }}" \
+          TEST_SYSTEM_PASSWORD="${{ secrets.TEST_SYSTEM_PASSWORD }}" \
+          TEST_SYSTEM_SCHEMA="${{ secrets.TEST_SYSTEM_SCHEMA }}" \
+          docker-compose run --rm tests
