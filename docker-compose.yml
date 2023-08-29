@@ -1,0 +1,17 @@
+version: '3'
+services:
+  tests:
+    platform: linux/amd64
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/opt/app/src
+    environment:
+      DEBUG: "True"
+      PYTHONPATH: /opt/app
+      TEST_SYSTEM_HOST:
+      TEST_SYSTEM_USERNAME:
+      TEST_SYSTEM_PASSWORD:
+      TEST_SYSTEM_SCHEMA:
+    env_file: .env.local

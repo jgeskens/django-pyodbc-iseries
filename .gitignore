@@ -269,3 +269,4 @@ cython_debug/
 ibm*.deb
 venv_*/
 /.idea/
+/.env.local

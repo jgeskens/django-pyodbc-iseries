@@ -44,3 +44,5 @@ MIGRATION_MODULES = {
     'contenttypes': None,
     'sessions': None,
 }
+
+USE_TZ = False
