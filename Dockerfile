@@ -14,11 +14,11 @@ RUN set -ex \
 
 RUN mkdir -p /opt/app
 
+RUN pip install pyodbc iseries django pytest-django
+
 COPY . /opt/app
 
 WORKDIR /opt/app
-
-RUN pip install pyodbc iseries django pytest-django
 
 RUN python setup.py develop
 
