@@ -3,9 +3,10 @@ services:
   tests:
     platform: linux/amd64
     build: .
-    volumes:
-      - .:/opt/app
     environment:
       DEBUG: "True"
       PYTHONPATH: /opt/app
-    env_file: .env.local
+      TEST_SYSTEM_HOST:
+      TEST_SYSTEM_USERNAME:
+      TEST_SYSTEM_PASSWORD:
+      TEST_SYSTEM_SCHEMA:

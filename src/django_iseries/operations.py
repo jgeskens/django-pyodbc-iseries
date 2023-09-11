@@ -69,6 +69,11 @@ class DatabaseOperations(BaseDatabaseOperations):
         elif aggregate.sql_function == 'VAR_SAMP':
             raise NotImplementedError("sample variance function not supported")
 
+    def convert_booleanfield_value(self, value, expression, connection):
+        if value in (0, 1):
+            value = bool(value)
+        return value
+
     def get_db_converters(self, expression):
         """
         Get a list of functions needed to convert field data.
@@ -78,6 +83,8 @@ class DatabaseOperations(BaseDatabaseOperations):
         internal_type = expression.output_field.get_internal_type()
         if internal_type == 'UUIDField':
             converters.append(self.convert_uuidfield_value)
+        if internal_type == 'BooleanField':
+            converters.append(self.convert_booleanfield_value)
         return converters
 
     def combine_duration_expression(self, connector, sub_expressions):

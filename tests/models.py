@@ -114,3 +114,6 @@ class Book(models.Model):
     author = models.ForeignKey(Author, models.CASCADE, to_field='name')
 
 
+class BooleanTable(models.Model):
+    name = models.CharField(max_length=255)
+    enabled = models.BooleanField(blank=True, default=False)

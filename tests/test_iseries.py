@@ -2,7 +2,7 @@ import pytest
 from django.core.exceptions import ImproperlyConfigured
 
 from django_iseries.creation import DatabaseCreation
-from tests.models import Object, ObjectReference
+from tests.models import Object, ObjectReference, BooleanTable
 
 
 @pytest.mark.django_db
@@ -76,3 +76,23 @@ class DBConstraintTests:
         intermediary_model.objects.create(from_object_id=obj.id, to_object_id=12345)
         assert obj.related_objects.count() == 1
         assert intermediary_model.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_boolean_mapping():
+    """
+    Regression test to make sure BooleanField returns actual bool values (True, False) instead of int values (1, 0)
+    """
+    BooleanTable.objects.all().delete()
+
+    entry_true = BooleanTable.objects.create(name='entry_true', enabled=True)
+    entry_false = BooleanTable.objects.create(name='entry_false', enabled=False)
+
+    assert BooleanTable.objects.get(enabled=True).name == 'entry_true'
+    assert BooleanTable.objects.get(enabled=False).name == 'entry_false'
+
+    entry_true.refresh_from_db()
+    entry_false.refresh_from_db()
+
+    assert entry_true.enabled is True
+    assert entry_false.enabled is False
