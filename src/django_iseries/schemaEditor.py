@@ -654,7 +654,8 @@ class DB2SchemaEditor(BaseDatabaseSchemaEditor):
                 'table': model._meta.db_table,
                 'name': index_name,
                 'columns': ', '.join(column.replace(old_field.column, new_field.column) for column in columns),
-                'extra': ""
+                'extra': '',
+                'include': ''
             })
 
     def quote_value(self, value):
