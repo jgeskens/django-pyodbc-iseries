@@ -396,7 +396,9 @@ class DB2SchemaEditor(BaseDatabaseSchemaEditor):
                     'table': self.quote_name(model._meta.db_table),
                     'name': self._create_index_name(model, [new_field.column], suffix="_index"),
                     'columns': self.quote_name(new_field.column),
-                    'extra': "",
+                    'extra': '',
+                    'include': '',
+                    'condition': ''
                 }
             )
         # Update incoming FK field
@@ -655,7 +657,8 @@ class DB2SchemaEditor(BaseDatabaseSchemaEditor):
                 'name': index_name,
                 'columns': ', '.join(column.replace(old_field.column, new_field.column) for column in columns),
                 'extra': '',
-                'include': ''
+                'include': '',
+                'condition': ''
             })
 
     def quote_value(self, value):
