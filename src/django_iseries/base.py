@@ -20,6 +20,7 @@
 DB2 database backend for Django.
 Requires: ibm_db_dbi (http://pypi.python.org/pypi/ibm_db) for python
 """
+import os
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import utils
@@ -35,6 +36,8 @@ from django_iseries.introspection import DatabaseIntrospection
 from django_iseries.operations import DatabaseOperations
 from django_iseries.schemaEditor import DB2SchemaEditor
 from . import Database
+
+SKIP_CONSTRAINT_CHECKING = os.getenv('SKIP_CONSTRAINT_CHECKING', '0').lower() in ('true', '1', 't', 'y', 'yes')
 
 dbms_name = 'dbname'
 
@@ -178,7 +181,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def __is_connection(self):
         return self.connection is not None
 
-    # To get dict of connection parameters 
+    # To get dict of connection parameters
     def get_connection_params(self):
         kwargs = {}
 
@@ -285,9 +288,16 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return DB2SchemaEditor(self, *args, **kwargs)
 
     def disable_constraint_checking(self):
-        raise utils.NotSupportedError(
-            "Db2 for iSeries currently supports no method of disabling constraints on a per-session basis."
-        )
+        """
+        When "SKIP_CONSTRAINT _CHECKING" is enabled, the library will act as if the constraints are no longer being
+          checked, while in fact, they are still being checked. This is implemented to allow for the django "loaddata"
+          command to keep working, as it implicitly disabled and re-enables constraints when loading data.
+        """
+        if not SKIP_CONSTRAINT_CHECKING:
+            raise utils.NotSupportedError(
+                    "Db2 for iSeries currently supports no method of disabling constraints on a per-session basis."
+                )
+        return True
 
     def connect(self):
         try:
