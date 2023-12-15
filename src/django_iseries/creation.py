@@ -50,6 +50,7 @@ class DatabaseCreation(BaseDatabaseCreation):
         'SlugField': 'VARCHAR(%(max_length)s)',
         'SmallIntegerField': 'SMALLINT',
         'TextField': 'CLOB CCSID 1208',
+        'JSONField': 'CLOB CCSID 1208',
         'TimeField': 'TIME',
         'USStateField': 'VARCHAR(2)',
         'URLField': 'VARCHAR2(%(max_length)s)',
