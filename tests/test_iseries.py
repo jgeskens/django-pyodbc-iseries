@@ -1,6 +1,9 @@
+import sys
+
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import OuterRef, Q
+from django.views.debug import ExceptionReporter
 
 from django_iseries.creation import DatabaseCreation
 from django_iseries.extra import Exists
@@ -100,6 +103,13 @@ def test_boolean_mapping():
     assert entry_false.enabled is False
 
 
+def write_html_exception_report(filename='/opt/app/exception.html'):
+    reporter = ExceptionReporter(None, is_email=False, *sys.exc_info())
+    html = reporter.get_traceback_html()
+    with open(filename, 'wb') as fh:
+        fh.write(html.encode('utf-8'))
+
+
 @pytest.mark.django_db
 def test_subqueries_and_exists():
     Customer.objects.all().delete()
@@ -109,7 +119,7 @@ def test_subqueries_and_exists():
         Country.objects.create(code=code)
 
     Customer.objects.create(name='Joske', country1='BE')
-    Customer.objects.create(name='Zorro', country2='ES', delete_code='X')
+    Customer.objects.create(name='Zorro', country2='ES', delete_code='Z')
     Customer.objects.create(name='Julie', country3='FR')
     Customer.objects.create(name='Ulrich', country1='DE')
 
@@ -136,6 +146,21 @@ def test_subqueries_and_exists():
 
     subquery = customers.values('id')[:1]
 
-    countries = list(Country.objects.annotate(is_used=Exists(subquery)))
+    try:
+        countries = list(Country.objects.annotate(is_used=Exists(subquery)).values('code', 'is_used'))
+    except:
+        write_html_exception_report()
+        raise
 
-    assert len(countries) > 0
+    countries_map = {c['code']: c['is_used'] for c in countries}
+
+    assert countries_map == {
+        'BE': True,
+        'NL': False,
+        'FR': True,
+        'ES': False,
+        'DE': True,
+        'US': False,
+        'GB': False
+    }
+

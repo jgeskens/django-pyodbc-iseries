@@ -217,6 +217,7 @@ class DB2CursorWrapper:
                 current_param_idx += 1
                 if in_select_clause:
                     quoted_val = self.quote_value(params.pop(current_param_idx))
+                    current_param_idx -= 1
                     t = sqlparse.sql.Token(sqlparse.tokens.String, quoted_val)
             elif t.normalized == 'SELECT':
                 in_select_clause = True
