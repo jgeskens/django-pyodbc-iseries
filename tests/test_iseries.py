@@ -1,8 +1,10 @@
 import pytest
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import OuterRef, Q
 
 from django_iseries.creation import DatabaseCreation
-from tests.models import Object, ObjectReference, BooleanTable
+from django_iseries.extra import Exists
+from tests.models import Object, ObjectReference, BooleanTable, Customer, Country
 
 
 @pytest.mark.django_db
@@ -96,3 +98,29 @@ def test_boolean_mapping():
 
     assert entry_true.enabled is True
     assert entry_false.enabled is False
+
+
+@pytest.mark.django_db
+def test_subqueries_and_exists():
+    Customer.objects.all().delete()
+    Country.objects.all().delete()
+
+    for code in ['BE', 'NL', 'FR', 'ES', 'DE', 'US', 'GB']:
+        Country.objects.create(code=code)
+
+    Customer.objects.create(name='Joske', country1='BE')
+    Customer.objects.create(name='Zorro', country2='ES', delete_code='X')
+    Customer.objects.create(name='Julie', country3='FR')
+    Customer.objects.create(name='Ulrich', country1='DE')
+
+    subquery = Customer.objects.filter(
+        delete_code=' '
+    ).filter(
+        Q(country1=OuterRef('code')) |
+        Q(country2=OuterRef('code')) |
+        Q(country3=OuterRef('code'))
+    ).values('id')[:1]
+
+    countries = list(Country.objects.annotate(is_used=Exists(subquery)))
+
+    assert len(countries) > 0
