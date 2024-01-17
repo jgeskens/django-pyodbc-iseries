@@ -113,13 +113,28 @@ def test_subqueries_and_exists():
     Customer.objects.create(name='Julie', country3='FR')
     Customer.objects.create(name='Ulrich', country1='DE')
 
-    subquery = Customer.objects.filter(
+    group1 = ['Joske', 'Zorro']
+    group2 = ['Julie', 'Ulrich']
+
+    customers = Customer.objects.filter(
+        name__in=group1,
         delete_code=' '
     ).filter(
         Q(country1=OuterRef('code')) |
         Q(country2=OuterRef('code')) |
         Q(country3=OuterRef('code'))
-    ).values('id')[:1]
+    ).union(
+        Customer.objects.filter(
+            name__in=group2,
+            delete_code=' '
+        ).filter(
+            Q(country1=OuterRef('code')) |
+            Q(country2=OuterRef('code')) |
+            Q(country3=OuterRef('code'))
+        )
+    )
+
+    subquery = customers.values('id')[:1]
 
     countries = list(Country.objects.annotate(is_used=Exists(subquery)))
 
