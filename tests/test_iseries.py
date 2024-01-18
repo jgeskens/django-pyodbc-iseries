@@ -1,8 +1,13 @@
+import sys
+
 import pytest
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import OuterRef, Q
+from django.views.debug import ExceptionReporter
 
 from django_iseries.creation import DatabaseCreation
-from tests.models import Object, ObjectReference, BooleanTable
+from django_iseries.extra import Exists
+from tests.models import Object, ObjectReference, BooleanTable, Customer, Country
 
 
 @pytest.mark.django_db
@@ -96,3 +101,66 @@ def test_boolean_mapping():
 
     assert entry_true.enabled is True
     assert entry_false.enabled is False
+
+
+def write_html_exception_report(filename='/opt/app/exception.html'):
+    reporter = ExceptionReporter(None, is_email=False, *sys.exc_info())
+    html = reporter.get_traceback_html()
+    with open(filename, 'wb') as fh:
+        fh.write(html.encode('utf-8'))
+
+
+@pytest.mark.django_db
+def test_subqueries_and_exists():
+    Customer.objects.all().delete()
+    Country.objects.all().delete()
+
+    for code in ['BE', 'NL', 'FR', 'ES', 'DE', 'US', 'GB']:
+        Country.objects.create(code=code)
+
+    Customer.objects.create(name='Joske', country1='BE')
+    Customer.objects.create(name='Zorro', country2='ES', delete_code='Z')
+    Customer.objects.create(name='Julie', country3='FR')
+    Customer.objects.create(name='Ulrich', country1='DE')
+
+    group1 = ['Joske', 'Zorro']
+    group2 = ['Julie', 'Ulrich']
+
+    customers = Customer.objects.filter(
+        name__in=group1,
+        delete_code=' '
+    ).filter(
+        Q(country1=OuterRef('code')) |
+        Q(country2=OuterRef('code')) |
+        Q(country3=OuterRef('code'))
+    ).union(
+        Customer.objects.filter(
+            name__in=group2,
+            delete_code=' '
+        ).filter(
+            Q(country1=OuterRef('code')) |
+            Q(country2=OuterRef('code')) |
+            Q(country3=OuterRef('code'))
+        )
+    )
+
+    subquery = customers.values('id')[:1]
+
+    try:
+        countries = list(Country.objects.annotate(is_used=Exists(subquery)).values('code', 'is_used'))
+    except:
+        write_html_exception_report()
+        raise
+
+    countries_map = {c['code']: c['is_used'] for c in countries}
+
+    assert countries_map == {
+        'BE': True,
+        'NL': False,
+        'FR': True,
+        'ES': False,
+        'DE': True,
+        'US': False,
+        'GB': False
+    }
+
