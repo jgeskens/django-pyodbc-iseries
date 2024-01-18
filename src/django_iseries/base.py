@@ -101,6 +101,7 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     supports_select_for_update_with_limit = False
     ignores_table_name_case = True
     supports_over_clause = True
+    supports_boolean_expr_in_select_clause = False
 
     create_test_procedure_without_params_sql = None
     create_test_procedure_with_int_param_sql = None

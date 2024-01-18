@@ -117,3 +117,15 @@ class Book(models.Model):
 class BooleanTable(models.Model):
     name = models.CharField(max_length=255)
     enabled = models.BooleanField(blank=True, default=False)
+
+
+class Customer(models.Model):
+    name = models.CharField(max_length=255)
+    country1 = models.CharField(max_length=2, blank=True)
+    country2 = models.CharField(max_length=2, blank=True)
+    country3 = models.CharField(max_length=2, blank=True)
+    delete_code = models.CharField(max_length=1, default=' ')
+
+
+class Country(models.Model):
+    code = models.CharField(max_length=2)
