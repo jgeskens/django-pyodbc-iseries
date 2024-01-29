@@ -164,3 +164,19 @@ def test_subqueries_and_exists():
         'GB': False
     }
 
+
+@pytest.mark.django_db
+def test_parameter_expansion():
+    from django_iseries.pybase import DB2CursorWrapper
+    from django.db import connection
+
+    test_sql = ("SELECT IDNR, ? AS IS_DRAFT, ? AS STATUS FROM table_name WHERE (UPPER(NAME) LIKE UPPER(?) ESCAPE '\\')"
+                " UNION "
+                "SELECT IDNR, ? AS IS_DRAFT, ? AS STATUS FROM table_name WHERE (UPPER(NAME) LIKE UPPER(?) ESCAPE '\\')")
+
+    params = [0, 'A', '%test1%', 0, 'B', '%test2%']
+
+    cw = DB2CursorWrapper(connection)
+    result_sql, params = cw._replace_placeholders_in_select_clause(params, test_sql)
+
+    assert params == ['%test1%', '%test2%']

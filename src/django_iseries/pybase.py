@@ -211,6 +211,7 @@ class DB2CursorWrapper:
         current_param_idx = -1
         in_select_clause = False
         tmp = []
+        query = query.replace("ESCAPE '\\'", "ESCAPE ''")
         parsed_statement = sqlparse.parse(query)[0]
         for t in parsed_statement.flatten():
             if t.ttype == sqlparse.tokens.Name.Placeholder:  # '?'
@@ -225,6 +226,7 @@ class DB2CursorWrapper:
                 in_select_clause = False
             tmp.append(str(t))
         query = ''.join(tmp)
+        query = query.replace("ESCAPE ''", "ESCAPE '\\'")
         return query, params
 
     def convert_query(self, query):
