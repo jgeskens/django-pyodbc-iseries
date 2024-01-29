@@ -209,21 +209,21 @@ class DB2CursorWrapper:
         if isinstance(params, tuple):
             params = list(params)
         current_param_idx = -1
-        in_select_clause = False
+        in_select_level = 0
         tmp = []
         query = query.replace("ESCAPE '\\'", "ESCAPE ''")
         parsed_statement = sqlparse.parse(query)[0]
         for t in parsed_statement.flatten():
             if t.ttype == sqlparse.tokens.Name.Placeholder:  # '?'
                 current_param_idx += 1
-                if in_select_clause:
+                if in_select_level >= 1:
                     quoted_val = self.quote_value(params.pop(current_param_idx))
                     current_param_idx -= 1
                     t = sqlparse.sql.Token(sqlparse.tokens.String, quoted_val)
             elif t.normalized == 'SELECT':
-                in_select_clause = True
+                in_select_level += 1
             elif t.normalized == 'FROM':
-                in_select_clause = False
+                in_select_level -= 1
             tmp.append(str(t))
         query = ''.join(tmp)
         query = query.replace("ESCAPE ''", "ESCAPE '\\'")
