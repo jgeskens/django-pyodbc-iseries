@@ -166,7 +166,7 @@ def test_subqueries_and_exists():
 
 
 @pytest.mark.django_db
-def test_parameter_expansion():
+def test_parameter_expansion_with_escape():
     from django_iseries.pybase import DB2CursorWrapper
     from django.db import connection
 
@@ -180,3 +180,25 @@ def test_parameter_expansion():
     result_sql, params = cw._replace_placeholders_in_select_clause(params, test_sql)
 
     assert params == ['%test1%', '%test2%']
+
+
+@pytest.mark.django_db
+def test_parameter_expansion_with_case():
+    from django_iseries.pybase import DB2CursorWrapper
+    from django.db import connection
+
+    test_sql = """
+    SELECT COUNT(*) AS "__COUNT" FROM table_name WHERE CASE WHEN (NOT ((
+            SELECT 1 FROM SYSIBM.SYSDUMMY1
+            UNION
+            SELECT 0 FROM SYSIBM.SYSDUMMY1 WHERE 0 <> 1
+        ) = 1)) THEN ? ELSE ? END = ?
+    """
+
+    params = [0, 1, 0]
+
+    cw = DB2CursorWrapper(connection)
+    result_sql, params = cw._replace_placeholders_in_select_clause(params, test_sql)
+
+    assert 'THEN 0 ELSE 1' in result_sql
+    assert params == [0]
